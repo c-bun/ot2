@@ -64,7 +64,6 @@ def run(protocol: protocol_api.ProtocolContext):
                 new_tip='always'
                 )
     
-    print(right_pipette._last_tip_picked_up_from)
     # Wait 5 minutes for things to fully mix
     # Maybe this is when we can add tips to the deck??
     incubate_start = time.perf_counter()
