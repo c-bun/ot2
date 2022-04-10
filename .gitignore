@@ -1,2 +1,3 @@
 .vscode/
 notebooks/.pynb_checkpoints
+.DS_Store
