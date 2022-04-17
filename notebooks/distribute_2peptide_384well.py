@@ -1,6 +1,7 @@
 
 from opentrons import protocol_api
 import time
+import json
 
 # metadata
 metadata = {
@@ -26,12 +27,20 @@ def run(protocol: protocol_api.ProtocolContext):
     }
 
     # labware
+    # load custom plates?
+    deepwell_def = json.load(open('../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json'))
+    grenier384_def = json.load(open('../labware/grenierbioone_384_wellplate_138ul/grenierbioone_384_wellplate_138ul.json'))
+
     deepwell_plates = [
-        protocol.load_labware('nest_96_wellplate_2ml_deep', 1),
-        protocol.load_labware('nest_96_wellplate_2ml_deep', 2)
+    #    protocol.load_labware('nest_96_wellplate_2ml_deep', 1),
+    #    protocol.load_labware('nest_96_wellplate_2ml_deep', 2),
+    protocol.load_labware_from_definition(deepwell_def, 1),
+    protocol.load_labware_from_definition(deepwell_def, 2),
     ]
-    well384 = protocol.load_labware('corning_384_wellplate_112ul_flat', 3)
+    well384 = protocol.load_labware_from_definition(grenier384_def, 3)
+    #well384 = protocol.load_labware('corning_384_wellplate_112ul_flat', 3)
     well12 = protocol.load_labware('nest_12_reservoir_15ml', 4)
+    print(well384)
 
     tip_racks = [
         protocol.load_labware('opentrons_96_tiprack_20ul', 11),
@@ -50,6 +59,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # Add peptides to wells first.
     for n, well in enumerate(PEPTIDE_WELLS):
         right_pipette.transfer(10, well12.wells_by_name()[well], well384.rows()[n])
+        print("transferred: ", n, well)
         amounts['peptides'][n+1] += 10*8*len(well384.rows()[n])
     
     # Now distribute the two, 96 well plates of mutants into the 384 well plate.
