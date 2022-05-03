@@ -5,7 +5,7 @@ import json
 
 # metadata
 metadata = {
-    'protocolName': 'Distribute Peptides 384',
+    'protocolName': 'Distribute Peptides 96',
     'author': 'Colin Rathbun <rathbunc@dickinson.edu>',
     'description': 'Distribute a 96 well plate plus 2 substrates into two, 96 well plates.',
     'apiLevel': '2.12'
@@ -14,6 +14,9 @@ metadata = {
 # for now, this only works with two peptides
 PEPTIDE_WELLS = ['A1','A2']
 FRZ_WELL = 'A12'
+PEPTIDE_AMOUNT = 20
+LYSATE_AMOUNT = 20
+FRZ_AMOUNT = 5
 
 # protocol run function. the part after the colon lets your editor know
 # where to look for autocomplete suggestions
@@ -32,10 +35,12 @@ def run(protocol: protocol_api.ProtocolContext):
     #use this one for now
     celltreat96_def = json.load(open('../labware/celltreat_96_wellplate_350ul/celltreat_96_wellplate_350ul.json'))
 
+    # this should be compatible with 1 plate as well
     deepwell_plates = [
     protocol.load_labware_from_definition(deepwell_def, 1),
     protocol.load_labware_from_definition(deepwell_def, 2),
     ]
+    # The number of well96_plates needs to be two times more than the number of deepwell plates
     well96_plates = [
         protocol.load_labware_from_definition(celltreat96_def, 3),
         protocol.load_labware_from_definition(celltreat96_def, 4),
@@ -57,30 +62,30 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Add peptides to wells first.
     for n, dest_plate in enumerate(well96_plates):
-        transfer_amount = 20
         peptide_well_target = PEPTIDE_WELLS[n%len(PEPTIDE_WELLS)]
         right_pipette.transfer(
-            transfer_amount, 
+            PEPTIDE_AMOUNT, 
             well12.wells_by_name()[peptide_well_target], 
             dest_plate.rows(),
             )
-        amounts['peptides'][n%len(PEPTIDE_WELLS)+1] += transfer_amount*8*len(well96_plates[n].rows())
+        amounts['peptides'][n%len(PEPTIDE_WELLS)+1] += PEPTIDE_AMOUNT*8*len(well96_plates[n].rows())
     
     # Now distribute the two, 96 well plates of mutants into the 96 blackwell plates.
     for n, dest_plate in enumerate(well96_plates):
-        transfer_amount = 20
         deepwell_plate_target = n//len(deepwell_plates) # TODO is this going to alternate properly??
         right_pipette.transfer(
-            transfer_amount,
+            LYSATE_AMOUNT,
             deepwell_plates[deepwell_plate_target].wells(),
-            dest_plate.wells(),
-            new_tip='always'
+            [well.top(z=-1) for well in dest_plate.wells()],
+            #dest_plate.wells(),
+            new_tip='once',
+            blow_out=True,
         )
     
     # Wait 5 minutes for things to fully mix
     # Maybe this is when we can add tips to the deck??
     incubate_start = time.perf_counter()
-    protocol.pause("Please add tips to any empty positions.")
+    protocol.pause("Please add tips to ALL empty positions and press RESUME.")
     incubate_end = time.perf_counter()
 
     # This assumes that we added tips!!
@@ -92,10 +97,10 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Now add FRZ
     for plate in well96_plates:
-        right_pipette.transfer(5, well12.wells_by_name()[FRZ_WELL], plate.wells(),
+        right_pipette.transfer(FRZ_AMOUNT, well12.wells_by_name()[FRZ_WELL], plate.wells(),
             new_tip='always',
             mix_after=(3,20)
         )
-    amounts['frz']+=96*len(well96_plates)*5
+    amounts['frz']+=96*len(well96_plates)*FRZ_AMOUNT
     
     print("Amounts of reagents used: ",amounts)
