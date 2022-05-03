@@ -10,7 +10,7 @@ metadata = {
     'apiLevel': '2.12'
 }
 
-TESTING = False
+TESTING = True
 
 # for now, this only works with two peptides
 PEPTIDE_WELLS = ['A1','A2']
@@ -77,7 +77,7 @@ def run(protocol: protocol_api.ProtocolContext):
     # pipettes
     right_pipette = protocol.load_instrument('p20_multi_gen2', 'right', tip_racks=tip_racks)
 
-    # Add peptides to wells first.
+    # Add peptides to wells first. This has been tested and works fine.
     for n, dest_plate in enumerate(well96_plates):
         peptide_well_target = PEPTIDE_WELLS[n%len(PEPTIDE_WELLS)]
         right_pipette.transfer(
@@ -90,15 +90,26 @@ def run(protocol: protocol_api.ProtocolContext):
     # Now distribute the two, 96 well plates of mutants into the 96 blackwell plates.
     for n, dest_plate in enumerate(well96_plates):
         deepwell_plate_target = n//len(deepwell_plates) # TODO is this going to alternate properly??
-        right_pipette.transfer(
-            LYSATE_AMOUNT,
-            deepwell_plates[deepwell_plate_target].wells(),
-            [well.top(z=-1) for well in dest_plate.wells()],
-            #dest_plate.wells(),
-            new_tip='once',
-            blow_out=True,
-        )
-    
+        try:
+            right_pipette.transfer(
+                LYSATE_AMOUNT,
+                deepwell_plates[deepwell_plate_target].wells(),
+                #[well.top(z=-1) for well in dest_plate.wells()], # TODO it would be nice to save tips here by using touch=True
+                dest_plate.wells(),
+                new_tip='always',
+            )
+        except protocol_api.labware.OutOfTipsError:
+            protocol.pause("Please add tips to ALL empty positions and press RESUME.")
+            right_pipette.reset_tipracks()
+            # try the same thing above again.
+            right_pipette.transfer(
+                LYSATE_AMOUNT,
+                deepwell_plates[deepwell_plate_target].wells(),
+                #[well.top(z=-1) for well in dest_plate.wells()], # TODO it would be nice to save tips here by using touch=True
+                dest_plate.wells(),
+                new_tip='always',
+            )
+
     # Wait 5 minutes for things to fully mix
     # Maybe this is when we can add tips to the deck??
     incubate_start = time.perf_counter()
