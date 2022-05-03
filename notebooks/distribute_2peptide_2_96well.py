@@ -1,4 +1,3 @@
-
 from opentrons import protocol_api
 import time
 import json
@@ -10,6 +9,8 @@ metadata = {
     'description': 'Distribute a 96 well plate plus 2 substrates into two, 96 well plates.',
     'apiLevel': '2.12'
 }
+
+TESTING = False
 
 # for now, this only works with two peptides
 PEPTIDE_WELLS = ['A1','A2']
@@ -29,11 +30,17 @@ def run(protocol: protocol_api.ProtocolContext):
         'frz':0
     }
 
-    # labware
-    # load custom plates?
-    deepwell_def = json.load(open('../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json'))
-    #use this one for now
-    celltreat96_def = json.load(open('../labware/celltreat_96_wellplate_350ul/celltreat_96_wellplate_350ul.json'))
+    if TESTING:
+        # labware
+        # load custom plates?
+        deepwell_def = json.load(open('../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json'))
+        #use this one for now
+        well96_def = json.load(open('../labware/celltreat_96_wellplate_350ul/celltreat_96_wellplate_350ul.json'))
+    else:
+        # These need to be the locally-defined strings.
+        deepwell_def = "labcon_96_wellplate_2200ul"
+        well96_def = "fisherbrand_96_wellplate_400ul"
+
 
     # this should be compatible with 1 plate as well
     deepwell_plates = [
@@ -42,10 +49,10 @@ def run(protocol: protocol_api.ProtocolContext):
     ]
     # The number of well96_plates needs to be two times more than the number of deepwell plates
     well96_plates = [
-        protocol.load_labware_from_definition(celltreat96_def, 3),
-        protocol.load_labware_from_definition(celltreat96_def, 4),
-        protocol.load_labware_from_definition(celltreat96_def, 5),
-        protocol.load_labware_from_definition(celltreat96_def, 6),
+        protocol.load_labware_from_definition(well96_def, 3),
+        protocol.load_labware_from_definition(well96_def, 4),
+        protocol.load_labware_from_definition(well96_def, 5),
+        protocol.load_labware_from_definition(well96_def, 6),
     ]
     
     well12 = protocol.load_labware('nest_12_reservoir_15ml', 7)
