@@ -11,7 +11,7 @@ metadata = {
     "apiLevel": "2.12",
 }
 
-TESTING = True
+TESTING = False
 
 # for now, this only works with two peptides
 PEPTIDE_WELLS = ["A1", "A2"]
@@ -38,11 +38,10 @@ def replicate_plate(
     for owell in origin.rows()[0]:
         pipette.pick_up_tip()
         for destination in destinations:
-            for dwell in destination.rows()[0]:
                 pipette.transfer(
                     amount,
                     owell,
-                    dwell.top(z=-1),
+                    destination[owell.well_name].top(z=-1),
                     touch_tip=True,
                     new_tip="never",
                 )
@@ -65,13 +64,13 @@ def run(protocol: protocol_api.ProtocolContext):
         # load custom plates?
         deepwell_def = json.load(
             open(
-                "labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json"
+                "../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json"
             )
         )
         # use this one for now
         well96_def = json.load(
             open(
-                "labware/celltreat_96_wellplate_350ul/celltreat_96_wellplate_350ul.json"
+                "../labware/celltreat_96_wellplate_350ul/celltreat_96_wellplate_350ul.json"
             )
         )
         deepwell_plates = [
