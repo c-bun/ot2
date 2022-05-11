@@ -16,8 +16,8 @@ TESTING = True
 # for now, this only works with two peptides
 PEPTIDE_WELLS = ["A1", "A2"]
 FRZ_WELL = "A12"
-PEPTIDE_AMOUNT = 40
-LYSATE_AMOUNT = 40
+PEPTIDE_AMOUNT = 20
+LYSATE_AMOUNT = 20
 FRZ_AMOUNT = 5
 
 
@@ -28,14 +28,17 @@ def replicate_plate(
     amount: int,
 ):
     """
-    *Should* distribute an origin 96 well plate into each specified destination plate. This method will use tips conservatively by using one set of tips for each position in the
-    origin plate. It will inject into the top of the destination plates and touch off the tips. This will require that the destination plates be tapped to ensure all the material
+    *Should* distribute an origin 96 well plate into each specified destination plate. 
+    This method will use tips conservatively by using one set of tips for each position in the
+    origin plate. It will inject into the top of the destination plates and touch off the tips. 
+    This will require that the destination plates be tapped to ensure all the material
     is in the bottom of the well.
+    TODO test this. It's probably necessary to save tips when transferring 40 uL.
     """
-    for owell in origin.wells():
+    for owell in origin.rows()[0]:
         pipette.pick_up_tip()
         for destination in destinations:
-            for dwell in destination.wells():
+            for dwell in destination.rows()[0]:
                 pipette.transfer(
                     amount,
                     owell,
@@ -62,13 +65,13 @@ def run(protocol: protocol_api.ProtocolContext):
         # load custom plates?
         deepwell_def = json.load(
             open(
-                "../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json"
+                "labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json"
             )
         )
         # use this one for now
         well96_def = json.load(
             open(
-                "../labware/celltreat_96_wellplate_350ul/celltreat_96_wellplate_350ul.json"
+                "labware/celltreat_96_wellplate_350ul/celltreat_96_wellplate_350ul.json"
             )
         )
         deepwell_plates = [
@@ -126,29 +129,33 @@ def run(protocol: protocol_api.ProtocolContext):
         )
 
     # Now distribute the two, 96 well plates of mutants into the 96 blackwell plates.
-    for n, dest_plate in enumerate(well96_plates):
-        deepwell_plate_target = n // len(
-            deepwell_plates
-        )  # TODO is this going to alternate properly??
-        try:
-            right_pipette.transfer(
-                LYSATE_AMOUNT,
-                deepwell_plates[deepwell_plate_target].wells(),
-                # [well.top(z=-1) for well in dest_plate.wells()], # TODO it would be nice to save tips here by using touch=True
-                dest_plate.wells(),
-                new_tip="always",
-            )
-        except protocol_api.labware.OutOfTipsError:
-            protocol.pause("Please add tips to ALL empty positions and press RESUME.")
-            right_pipette.reset_tipracks()
-            # try the same thing above again.
-            right_pipette.transfer(
-                LYSATE_AMOUNT,
-                deepwell_plates[deepwell_plate_target].wells(),
-                # [well.top(z=-1) for well in dest_plate.wells()], # TODO it would be nice to save tips here by using touch=True
-                dest_plate.wells(),
-                new_tip="always",
-            )
+    # for n, dest_plate in enumerate(well96_plates):
+    #     deepwell_plate_target = n // len(
+    #         deepwell_plates
+    #     )  # TODO is this going to alternate properly??
+    #     try:
+    #         right_pipette.transfer(
+    #             LYSATE_AMOUNT,
+    #             deepwell_plates[deepwell_plate_target].wells(),
+    #             # [well.top(z=-1) for well in dest_plate.wells()], # TODO it would be nice to save tips here by using touch=True
+    #             dest_plate.wells(),
+    #             new_tip="always",
+    #         )
+    #     except protocol_api.labware.OutOfTipsError:
+    #         protocol.pause("Please add tips to ALL empty positions and press RESUME.")
+    #         right_pipette.reset_tipracks()
+    #         # try the same thing above again.
+    #         right_pipette.transfer(
+    #             LYSATE_AMOUNT,
+    #             deepwell_plates[deepwell_plate_target].wells(),
+    #             # [well.top(z=-1) for well in dest_plate.wells()], # TODO it would be nice to save tips here by using touch=True
+    #             dest_plate.wells(),
+    #             new_tip="always",
+    #         )
+
+    # TODO generate this programmatically.
+    replicate_plate(right_pipette, deepwell_plates[0], well96_plates[:2], LYSATE_AMOUNT)
+    replicate_plate(right_pipette, deepwell_plates[1], well96_plates[2:], LYSATE_AMOUNT)
 
     # Wait 5 minutes for things to fully mix
     incubate_start = time.perf_counter()
