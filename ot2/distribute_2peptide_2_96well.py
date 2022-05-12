@@ -33,7 +33,9 @@ def replicate_plate(
     origin plate. It will inject into the top of the destination plates and touch off the tips. 
     This will require that the destination plates be tapped to ensure all the material
     is in the bottom of the well.
-    TODO test this. It's probably necessary to save tips when transferring 40 uL.
+    
+    TODO This was tested on 5/11/22 and mostly worked. Would be good to have tips not go
+    to the bottom of the deepwell plates because they picked up some lysate goo.
     """
     for owell in origin.rows()[0]:
         pipette.pick_up_tip()
