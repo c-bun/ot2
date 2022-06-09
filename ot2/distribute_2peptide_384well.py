@@ -7,7 +7,7 @@ from typing import List
 metadata = {
     "protocolName": "Distribute Peptides 384",
     "author": "Colin Rathbun <rathbunc@dickinson.edu>",
-    "description": "Distribute a 96 well plate plus 4 substrates into a 384 well plate.",
+    "description": "Distribute two 96 deepwell well plates plus 2 substrates into a 384 well plate.",
     "apiLevel": "2.12",
 }
 
@@ -17,11 +17,12 @@ TESTING = True
 PEPTIDE_WELLS = ["A1", "A2"]
 FRZ_WELL = "A12"
 PEPTIDE_AMOUNT = 8
-FRZ_AMOUNT = 4
+FRZ_AMOUNT = 2
 LYSATE_AMOUNT = 8
 
 
 def consolidate_plate(
+    protocol: protocol_api.ProtocolContext,
     pipette: protocol_api.InstrumentContext,
     origin_plates: List[protocol_api.labware.Labware],
     destination_plate: protocol_api.labware.Labware,
@@ -36,6 +37,7 @@ def consolidate_plate(
     :param amount: amount of material to consolidate
     """
     for n, origin_plate in enumerate(origin_plates):
+        protocol.pause("Confirm plates of lysate are present in the correct locations.")
         for i, col in enumerate(origin_plate.columns_by_name()):
             pipette.pick_up_tip()
             # Correctly iterate through A1 and B1 on the 384 well plate.
@@ -45,7 +47,7 @@ def consolidate_plate(
                 pipette.transfer(
                     amount,
                     origin_plate.columns_by_name()[col][0].bottom(
-                        z=6
+                        z=4
                     ),  # Grab from 6mm above the bottom of the plate to avoid lysate goo. TODO change this when switch to eCPX.
                     row.top(
                         z=-2
@@ -124,14 +126,10 @@ def run(protocol: protocol_api.ProtocolContext):
         amounts["peptides"][n + 1] += PEPTIDE_AMOUNT * 8 * len(well384.rows()[n])
 
     # Now distribute the two, 96 well plates of mutants into the 384 well plate.
-    consolidate_plate(right_pipette, deepwell_plates, well384, PEPTIDE_AMOUNT)
+    consolidate_plate(protocol, right_pipette, deepwell_plates, well384, PEPTIDE_AMOUNT)
 
-    # This assumes that we added tips!!
-    # right_pipette.reset_tipracks()
-
-    # Add additional delay if tips were replaced too quickly. TODO this does not work. Is it necessary to have a delay?
-    # if incubate_end - incubate_start < 300:
-    #     protocol.delay(seconds=300 - (incubate_end - incubate_start))
+    # Pause and confirm ready to add FRZ
+    protocol.pause("Confirm that FRZ is in the appropriate well and ready.")
 
     # Now add FRZ
     right_pipette.transfer(
