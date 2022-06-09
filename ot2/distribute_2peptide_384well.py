@@ -67,18 +67,20 @@ def run(protocol: protocol_api.ProtocolContext):
         "frz": 0,
     }
 
-    # labware
-    # load custom plates?
-    deepwell_def = json.load(
-        open("../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json")
-    )
-    grenier384_def = json.load(
-        open(
-            "../labware/grenierbioone_384_wellplate_138ul/grenierbioone_384_wellplate_138ul.json"
-        )
-    )
-
     if TESTING:
+
+        # custom labware
+        deepwell_def = json.load(
+            open(
+                "../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json"
+            )
+        )
+        grenier384_def = json.load(
+            open(
+                "../labware/grenierbioone_384_wellplate_138ul/grenierbioone_384_wellplate_138ul.json"
+            )
+        )
+
         deepwell_plates = [
             #    protocol.load_labware('nest_96_wellplate_2ml_deep', 1),
             #    protocol.load_labware('nest_96_wellplate_2ml_deep', 2),
