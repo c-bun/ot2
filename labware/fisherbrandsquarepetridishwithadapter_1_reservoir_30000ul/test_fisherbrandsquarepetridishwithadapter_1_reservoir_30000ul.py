@@ -6,7 +6,7 @@ TEST_LABWARE_SLOT = '5'
 
 RATE = 0.25  # % of default speeds
 
-PIPETTE_MOUNT = 'right'
+PIPETTE_MOUNT = 'left'
 PIPETTE_NAME = 'p20_single_gen2'
 
 TIPRACK_SLOT = '11'
