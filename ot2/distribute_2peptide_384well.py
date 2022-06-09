@@ -128,12 +128,8 @@ def run(protocol: protocol_api.ProtocolContext):
     # Now distribute the two, 96 well plates of mutants into the 384 well plate.
     consolidate_plate(protocol, right_pipette, deepwell_plates, well384, PEPTIDE_AMOUNT)
 
-    # This assumes that we added tips!!
-    # right_pipette.reset_tipracks()
-
-    # Add additional delay if tips were replaced too quickly. TODO this does not work. Is it necessary to have a delay?
-    # if incubate_end - incubate_start < 300:
-    #     protocol.delay(seconds=300 - (incubate_end - incubate_start))
+    # Pause and confirm ready to add FRZ
+    protocol.pause("Confirm that FRZ is in the appropriate well and ready.")
 
     # Now add FRZ
     right_pipette.transfer(
