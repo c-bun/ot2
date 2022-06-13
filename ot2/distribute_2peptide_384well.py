@@ -116,12 +116,15 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Add peptides to wells first.
     for n, well in enumerate(PEPTIDE_WELLS):
-        right_pipette.distribute(
+        # right_pipette.distribute(
+        #     PEPTIDE_AMOUNT,
+        #     well12.wells_by_name()[well],
+        #     well384.rows()[n],
+        #     blowout_location="source well",
+        # )  # This will draw extra into the pipette to be able to dispense at multiple places with the same movement. Saves time.
+        right_pipette.transfer(
             PEPTIDE_AMOUNT, well12.wells_by_name()[well], well384.rows()[n]
-        )  # This will draw extra into the pipette to be able to dispense at multiple places with the same movement. Saves time.
-        # right_pipette.transfer(
-        #     PEPTIDE_AMOUNT, well12.wells_by_name()[well], well384.rows()[n]
-        # )
+        )
         # print("transferred: ", n, well)
         amounts["peptides"][n + 1] += PEPTIDE_AMOUNT * 8 * len(well384.rows()[n])
 
@@ -137,7 +140,7 @@ def run(protocol: protocol_api.ProtocolContext):
         well12.wells_by_name()[FRZ_WELL],
         well384.wells(),
         new_tip="always",
-        mix_after=(3, 20),
+        # mix_after=(3, 20), # If this is skipped, mix on the plate reader.
     )
     amounts["frz"] += 384 * FRZ_AMOUNT
 
