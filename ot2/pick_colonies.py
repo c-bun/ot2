@@ -674,6 +674,7 @@ def innoculate_colony(
     global colonies_picked
     plate = deepwell_plates[colonies_picked // 96]
     well = plate.wells()[colonies_picked % 96]
+    pipette.aspirate(10, well)
     pipette.dispense(10, well)
     pipette.aspirate(10, well)
     pipette.dispense(10, well)
@@ -710,13 +711,13 @@ def run(protocol: protocol_api.ProtocolContext):
             protocol.load_labware("labcon_96_wellplate_2200ul", 9),
         ]
         petri_dishes = [
-            protocol.load_labware_from_definition(
+            protocol.load_labware(
                 "fisherbrandsquarepetridishwithadapter_1_reservoir_30000ul", 4
             ),
-            protocol.load_labware_from_definition(
+            protocol.load_labware(
                 "fisherbrandsquarepetridishwithadapter_1_reservoir_30000ul", 5
             ),
-            protocol.load_labware_from_definition(
+            protocol.load_labware(
                 "fisherbrandsquarepetridishwithadapter_1_reservoir_30000ul", 6
             ),
         ]

@@ -11,7 +11,7 @@ metadata = {
     "apiLevel": "2.12",
 }
 
-TESTING = True
+TESTING = False
 
 # for now, this only works with two peptides
 PEPTIDE_WELLS = ["A1", "A2"]
