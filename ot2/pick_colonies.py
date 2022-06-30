@@ -351,6 +351,9 @@ def run(protocol: protocol_api.ProtocolContext):
                     # ),  # because there are too many decimal places in the csv?
                     (float(colony["x%"]), float(colony["y%"])),
                 )
+                if i < 4:
+                    # pause to make sure that the tip is in the right spot
+                    protocol.pause("Is the tip in the right spot?")
                 innoculate_colony(left_pipette, deepwell_plates)
             else:
                 print("Done with all plates.")
