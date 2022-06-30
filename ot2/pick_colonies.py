@@ -222,8 +222,6 @@ colonies_picked = 0
 
 def populate_deck(
     protocol: protocol_api.ProtocolContext,
-    deepwell_def,
-    petri_dish_def,
     next_open_position=11,
 ):
 
@@ -234,17 +232,46 @@ def populate_deck(
     ]
     next_open_position -= len(tip_racks)
 
-    deepwell_plates = [
-        protocol.load_labware_from_definition(deepwell_def, next_open_position - i)
-        for i in range(NUMBER_OF_96_WELL_PLATES)
-    ]
-    next_open_position -= len(deepwell_plates)
+    if TESTING:
+        deepwell_plates = [
+            protocol.load_labware_from_definition(
+                json.load(
+                    open(
+                        "../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json"
+                    )
+                ),
+                next_open_position - i,
+            )
+            for i in range(NUMBER_OF_96_WELL_PLATES)
+        ]
+        next_open_position -= len(deepwell_plates)
 
-    petri_dishes = [
-        protocol.load_labware_from_definition(petri_dish_def, next_open_position - i)
-        for i in range(len(PLATE_CSVs))
-    ]
-    next_open_position -= len(petri_dishes)
+        petri_dishes = [
+            protocol.load_labware_from_definition(
+                json.load(
+                    open(
+                        "../labware/celltreat_1_wellplate_48000ul/celltreat_1_wellplate_48000ul.json"
+                    )
+                ),
+                next_open_position - i,
+            )
+            for i in range(len(PLATE_CSVs))
+        ]
+        next_open_position -= len(petri_dishes)
+    else:
+        deepwell_plates = [
+            protocol.load_labware("labcon_96_wellplate_2200ul", next_open_position - i)
+            for i in range(NUMBER_OF_96_WELL_PLATES)
+        ]
+        next_open_position -= len(deepwell_plates)
+
+        petri_dishes = [
+            protocol.load_labware(
+                "celltreat_1_wellplate_48000ul", next_open_position - i
+            )
+            for i in range(len(PLATE_CSVs))
+        ]
+        next_open_position -= len(petri_dishes)
 
     return tip_racks, deepwell_plates, petri_dishes
 
@@ -297,31 +324,7 @@ def innoculate_colony(
 
 def run(protocol: protocol_api.ProtocolContext):
 
-    global deepwell_def, petri_dish_def
-    if TESTING:
-        # load custom labware from file
-        deepwell_def = json.load(
-            open(
-                "../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json"
-            )
-        )
-        petri_dish_def = json.load(
-            open(
-                "../labware/celltreat_1_wellplate_48000ul/celltreat_1_wellplate_48000ul.json"
-            )
-        )
-    else:
-        # load labware from robot
-        deepwell_def = protocol_api.labware.get_labware_definition(
-            "labcon_96_wellplate_2200ul"
-        )
-        petri_dish_def = protocol_api.labware.get_labware_definition(
-            "celltreat_1_wellplate_48000ul"
-        )
-
-    tip_racks, deepwell_plates, petri_dishes = populate_deck(
-        protocol, deepwell_def, petri_dish_def
-    )
+    tip_racks, deepwell_plates, petri_dishes = populate_deck(protocol)
 
     # pipettes
     left_pipette = protocol.load_instrument(
