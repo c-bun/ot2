@@ -13,8 +13,8 @@ metadata = {
 
 TESTING = False
 
-# for now, this only works with two peptides
-PEPTIDE_WELLS = ["A1", "A2"]
+NUMBER_OF_DEEPWELL_PLATES = 2  # this can only be 1 or 2 right now
+PEPTIDE_WELLS = ["A1", "A2"]  # for now, this only works with two peptides
 FRZ_WELL = "A12"
 PEPTIDE_AMOUNT = 8
 FRZ_AMOUNT = 2
@@ -84,16 +84,14 @@ def run(protocol: protocol_api.ProtocolContext):
         )
 
         deepwell_plates = [
-            #    protocol.load_labware('nest_96_wellplate_2ml_deep', 1),
-            #    protocol.load_labware('nest_96_wellplate_2ml_deep', 2),
-            protocol.load_labware_from_definition(deepwell_def, 1),
-            protocol.load_labware_from_definition(deepwell_def, 2),
+            protocol.load_labware_from_definition(deepwell_def, c + 1)
+            for c in range(NUMBER_OF_DEEPWELL_PLATES)
         ]
         well384 = protocol.load_labware_from_definition(grenier384_def, 3)
     else:
         deepwell_plates = [
-            protocol.load_labware("labcon_96_wellplate_2200ul", 1),
-            protocol.load_labware("labcon_96_wellplate_2200ul", 2),
+            protocol.load_labware("labcon_96_wellplate_2200ul", c + 1)
+            for c in range(NUMBER_OF_DEEPWELL_PLATES)
         ]
         well384 = protocol.load_labware("grenierbioone_384_wellplate_138ul", 3)
 
@@ -116,17 +114,19 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # Add peptides to wells first.
     for n, well in enumerate(PEPTIDE_WELLS):
-        # right_pipette.distribute(
-        #     PEPTIDE_AMOUNT,
-        #     well12.wells_by_name()[well],
-        #     well384.rows()[n],
-        #     blowout_location="source well",
-        # )  # This will draw extra into the pipette to be able to dispense at multiple places with the same movement. Saves time.
-        right_pipette.transfer(
-            PEPTIDE_AMOUNT, well12.wells_by_name()[well], well384.rows()[n]
-        )
-        # print("transferred: ", n, well)
-        amounts["peptides"][n + 1] += PEPTIDE_AMOUNT * 8 * len(well384.rows()[n])
+        # TODO: this should be able to work regardless of the number of deepwell plates.
+        if NUMBER_OF_DEEPWELL_PLATES == 2:
+            right_pipette.transfer(
+                PEPTIDE_AMOUNT, well12.wells_by_name()[well], well384.rows()[n]
+            )
+            amounts["peptides"][n + 1] += PEPTIDE_AMOUNT * 8 * len(well384.rows()[n])
+        else:
+            right_pipette.transfer(
+                PEPTIDE_AMOUNT, well12.wells_by_name()[well], well384.rows()[n][:12]
+            )
+            amounts["peptides"][n + 1] += (
+                PEPTIDE_AMOUNT * 8 * len(well384.rows()[n]) / 2
+            )
 
     # Now distribute the two, 96 well plates of mutants into the 384 well plate.
     consolidate_plate(protocol, right_pipette, deepwell_plates, well384, PEPTIDE_AMOUNT)
@@ -135,13 +135,23 @@ def run(protocol: protocol_api.ProtocolContext):
     protocol.pause("Confirm that FRZ is in the appropriate well and ready.")
 
     # Now add FRZ
-    right_pipette.transfer(
-        FRZ_AMOUNT,
-        well12.wells_by_name()[FRZ_WELL],
-        well384.wells(),
-        new_tip="always",
-        # mix_after=(3, 20), # If this is skipped, mix on the plate reader.
-    )
-    amounts["frz"] += 384 * FRZ_AMOUNT
+    if NUMBER_OF_DEEPWELL_PLATES == 2:
+        right_pipette.transfer(
+            FRZ_AMOUNT,
+            well12.wells_by_name()[FRZ_WELL],
+            well384.wells(),
+            new_tip="always",
+            mix_after=(3, 8),  # If this is skipped, mix on the plate reader.
+        )
+        amounts["frz"] += 384 * FRZ_AMOUNT
+    else:
+        right_pipette.transfer(
+            FRZ_AMOUNT,
+            well12.wells_by_name()[FRZ_WELL],
+            well384.columns()[:12],
+            new_tip="always",
+            mix_after=(3, 8),  # If this is skipped, mix on the plate reader.
+        )
+        amounts["frz"] += FRZ_AMOUNT * 384 / 2
 
     print("Amounts of reagents used: ", amounts)
