@@ -7,7 +7,7 @@ import csv
 
 # metadata
 metadata = {
-    "protocolName": "Coloy Picker",
+    "protocolName": "Colony Picker",
     "author": "Colin Rathbun <rathbunc@dickinson.edu>",
     "description": "Given a CSV of colony locations, pick the colonies and innoculate them in 96 well plates.",
     "apiLevel": "2.12",
@@ -316,8 +316,8 @@ def innoculate_colony(
     well = plate.wells()[colonies_picked % 96]
     pipette.aspirate(10, well)
     pipette.dispense(10, well)
-    pipette.aspirate(10, well)
-    pipette.dispense(10, well)
+    # pipette.aspirate(10, well)
+    # pipette.dispense(10, well)
     pipette.drop_tip()
     colonies_picked += 1
 
@@ -348,16 +348,13 @@ def run(protocol: protocol_api.ProtocolContext):
                 pick_colony(
                     left_pipette,
                     petri_dishes[plate - 1],
-                    # (
-                    #     "%.3f" % float(colony["x%"]),
-                    #     "%.3f" % float(colony["y%"]),
-                    # ),  # because there are too many decimal places in the csv?
                     (float(colony["x%"]), float(colony["y%"])),
                 )
                 if i < 4:
-                    # pause to make sure that the tip is in the right spot
+                    # pause to make sure that the tip is in the right spot for the first three colonies
                     protocol.pause("Is the tip in the right spot?")
                 innoculate_colony(left_pipette, deepwell_plates)
+                # TODO: Why does this only pick 187 colonies?
             else:
                 print("Done with all plates.")
                 break
