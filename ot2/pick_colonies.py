@@ -338,7 +338,7 @@ def run(protocol: protocol_api.ProtocolContext):
             if colonies_picked < (96 * len(deepwell_plates)):
                 print(
                     "Picking colony {} of {} from {} at x={} and y={}".format(
-                        i + 1,
+                        colonies_picked + 1,
                         len(deepwell_plates * 96),
                         plate,
                         colony["x%"],
@@ -350,11 +350,12 @@ def run(protocol: protocol_api.ProtocolContext):
                     petri_dishes[plate - 1],
                     (float(colony["x%"]), float(colony["y%"])),
                 )
-                if i < 4:
+                if colonies_picked < 4:
                     # pause to make sure that the tip is in the right spot for the first three colonies
                     protocol.pause("Is the tip in the right spot?")
                 innoculate_colony(left_pipette, deepwell_plates)
-                # TODO: Why does this only pick 187 colonies?
+                # Why does this only pick 187 colonies? This was because the copy of the csv out of excel fucked up.
             else:
                 print("Done with all plates.")
                 break
+        print("Done with plate {}".format(plate))
