@@ -17,7 +17,12 @@ metadata = {
 TESTING = True
 
 # Other hardcoded parameters
-NUMBER_OF_96_WELL_PLATES = 2  # This can only be between 1 and 4.
+NUMBER_OF_384_WELL_PLATES = (
+    1  # This can only be 1 for now because we will run out of tips.
+)
+
+FRZ_WELL = "A2"
+PBS_WELL = "A1"
 
 # Paste CSV files here. This can only be between 1 and 3 dishes. There MUST be enogh colonies in the csv to fill all plates.
 PLATE_CSVs = {
@@ -222,29 +227,26 @@ colonies_picked = 0
 
 def populate_deck(
     protocol: protocol_api.ProtocolContext,
-    next_open_position=11,
+    next_open_position=1,
 ):
 
-    # Load in the tipracks.
-    tip_racks = [
-        protocol.load_labware("opentrons_96_tiprack_20ul", next_open_position - i)
-        for i in range(NUMBER_OF_96_WELL_PLATES)
-    ]
-    next_open_position -= len(tip_racks)
+    # Load in a 12-well reservoir.
+    reservoir = protocol.load_labware("nest_12_reservoir_15ml", next_open_position)
+    next_open_position += 1
 
     if TESTING:
-        deepwell_plates = [
+        well_plates = [
             protocol.load_labware_from_definition(
                 json.load(
                     open(
-                        "../labware/labcon_96_wellplate_2200ul/labcon_96_wellplate_2200ul.json"
+                        "../labware/grenierbioone_384_wellplate_138ul/grenierbioone_384_wellplate_138ul.json"
                     )
                 ),
-                next_open_position - i,
+                next_open_position + i,
             )
-            for i in range(NUMBER_OF_96_WELL_PLATES)
+            for i in range(NUMBER_OF_384_WELL_PLATES)
         ]
-        next_open_position -= len(deepwell_plates)
+        next_open_position += len(well_plates)
 
         petri_dishes = [
             protocol.load_labware_from_definition(
@@ -253,27 +255,35 @@ def populate_deck(
                         "../labware/celltreat_1_wellplate_48000ul/celltreat_1_wellplate_48000ul.json"
                     )
                 ),
-                next_open_position - i,
+                next_open_position + i,
             )
             for i in range(len(PLATE_CSVs))
         ]
-        next_open_position -= len(petri_dishes)
+        next_open_position += len(petri_dishes)
     else:
-        deepwell_plates = [
-            protocol.load_labware("labcon_96_wellplate_2200ul", next_open_position - i)
-            for i in range(NUMBER_OF_96_WELL_PLATES)
+        well_plates = [
+            protocol.load_labware(
+                "grenierbioone_384_wellplate_138ul", next_open_position + i
+            )
+            for i in range(NUMBER_OF_384_WELL_PLATES)
         ]
-        next_open_position -= len(deepwell_plates)
+        next_open_position += len(well_plates)
 
         petri_dishes = [
             protocol.load_labware(
-                "celltreat_1_wellplate_48000ul", next_open_position - i
+                "celltreat_1_wellplate_48000ul", next_open_position + i
             )
             for i in range(len(PLATE_CSVs))
         ]
-        next_open_position -= len(petri_dishes)
+        next_open_position += len(petri_dishes)
 
-    return tip_racks, deepwell_plates, petri_dishes
+        # Load in the tipracks. Fill the rest of the open positions.
+    tip_racks = [
+        protocol.load_labware("opentrons_96_tiprack_20ul", next_open_position + i)
+        for i in range(11 - next_open_position)
+    ]
+
+    return tip_racks, reservoir, well_plates, petri_dishes
 
 
 def pick_colony(
@@ -306,13 +316,13 @@ def pick_colony(
 
 def innoculate_colony(
     pipette: protocol_api.InstrumentContext,
-    deepwell_plates: List[protocol_api.labware.Labware],
+    well_plates: List[protocol_api.labware.Labware],
 ):
     """
     With a picked colony on the tip of the pipette, innoculate the colony in the next availble well.
     """
     global colonies_picked
-    plate = deepwell_plates[colonies_picked // 96]
+    plate = well_plates[colonies_picked // 96]
     well = plate.wells()[colonies_picked % 96]
     pipette.aspirate(10, well)
     pipette.dispense(10, well)
@@ -324,22 +334,34 @@ def innoculate_colony(
 
 def run(protocol: protocol_api.ProtocolContext):
 
-    tip_racks, deepwell_plates, petri_dishes = populate_deck(protocol)
+    tip_racks, reservoir, well_plates, petri_dishes = populate_deck(protocol)
 
     # pipettes
     left_pipette = protocol.load_instrument(
         "p20_single_gen2", "left", tip_racks=tip_racks
     )
+    right_pipette = protocol.load_instrument(
+        "p20_multi_gen2", "right", tip_racks=tip_racks
+    )
+
+    # Fill the 384 well plates with 20 uL from the reservoir.
+    for plate in well_plates:
+        right_pipette.transfer(
+            20,
+            reservoir.wells_by_name()[PBS_WELL],
+            plate.wells(),
+            new_tip="once",
+        )
 
     for plate, raw_csv in PLATE_CSVs.items():
         csv_data = raw_csv.splitlines()[1:]  # Discard the blank first line.
         colonies = csv.DictReader(csv_data)
         for i, colony in enumerate(colonies):
-            if colonies_picked < (96 * len(deepwell_plates)):
+            if colonies_picked < (96 * len(well_plates)):
                 print(
                     "Picking colony {} of {} from {} at x={} and y={}".format(
                         colonies_picked + 1,
-                        len(deepwell_plates * 96),
+                        len(well_plates * 96),
                         plate,
                         colony["x%"],
                         colony["y%"],
@@ -353,9 +375,25 @@ def run(protocol: protocol_api.ProtocolContext):
                 if colonies_picked < 4:
                     # pause to make sure that the tip is in the right spot for the first three colonies
                     protocol.pause("Is the tip in the right spot?")
-                innoculate_colony(left_pipette, deepwell_plates)
-                # Why does this only pick 187 colonies? This was because the copy of the csv out of excel fucked up.
+                innoculate_colony(left_pipette, well_plates)
             else:
                 print("Done with all plates.")
                 break
         print("Done with plate {}".format(plate))
+
+    protocol.pause(
+        "Done with colonies, ADD TIPS TO ALL EMPTY POSITIONS and press resume to add furimazine."
+    )
+    # This assumes that we added tips!!
+    right_pipette.reset_tipracks()
+    left_pipette.reset_tipracks()
+
+    # Add 5 uL furimazine to the well plates from the reservoir.
+    for plate in well_plates:
+        right_pipette.transfer(
+            5,
+            reservoir.wells_by_name()[FRZ_WELL],
+            plate.wells(),
+            new_tip="always",
+            mix_after=(1, 5),
+        )
