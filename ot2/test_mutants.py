@@ -73,26 +73,30 @@ def run(protocol: protocol_api.ProtocolContext):
 
     # First, transfer the mutants to the 384 well plate.
     right_pipette.pick_up_tip()
-    for i in range(NUMBER_OF_CONDITIONS * 3):
-        right_pipette.distribute(
-            AMOUNT_OF_LYSATE,
-            deepwell_mutants.wells_by_name()["A1"],
-            well384plate.wells_by_name()["A{}".format(i + 1)],
-            new_tip="never",
-            disposal_volume=0,
-        )
+    right_pipette.distribute(
+        AMOUNT_OF_LYSATE,
+        deepwell_mutants.wells_by_name()["A1"],
+        [
+            well384plate.wells_by_name()["A{}".format(i + 1)]
+            for i in range(NUMBER_OF_CONDITIONS * 3)
+        ],
+        new_tip="never",
+        disposal_volume=0,
+    )
     right_pipette.drop_tip()
     if NUMBER_OF_MUTANTS > 8:
         # The same thing needs to happen with the second column if there are mutants there.
         right_pipette.pick_up_tip()
-        for i in range(NUMBER_OF_CONDITIONS * 3):
-            right_pipette.distribute(
-                AMOUNT_OF_LYSATE,
-                deepwell_mutants.wells_by_name()["A2"],
-                well384plate.wells_by_name()["B{}".format(i + 1)],
-                new_tip="never",
-                disposal_volume=0,
-            )
+        right_pipette.distribute(
+            AMOUNT_OF_LYSATE,
+            deepwell_mutants.wells_by_name()["A2"],
+            [
+                well384plate.wells_by_name()["B{}".format(i + 1)]
+                for i in range(NUMBER_OF_CONDITIONS * 3)
+            ],
+            new_tip="never",
+            disposal_volume=0,
+        )
         right_pipette.drop_tip()
 
     # Now, transfer the peptides to the 384 well plate.
@@ -106,7 +110,6 @@ def run(protocol: protocol_api.ProtocolContext):
                 for x in range(i * 3, i * 3 + 3)
             ],
             new_tip="never",
-            touch_tip=True,
             disposal_volume=0,
         )
         if NUMBER_OF_MUTANTS > 8:
@@ -118,7 +121,6 @@ def run(protocol: protocol_api.ProtocolContext):
                     for x in range(i * 3, i * 3 + 3)
                 ],
                 new_tip="never",
-                touch_tip=True,
                 disposal_volume=0,
             )
         right_pipette.drop_tip()
