@@ -110,7 +110,9 @@ def run(protocol: protocol_api.ProtocolContext):
                 for x in range(i * 3, i * 3 + 3)
             ],
             new_tip="never",
-            disposal_volume=0,
+            disposal_volume=2,
+            blow_out=True,
+            blowout_location="source well",
         )
         if NUMBER_OF_MUTANTS > 8:
             right_pipette.distribute(
@@ -121,7 +123,9 @@ def run(protocol: protocol_api.ProtocolContext):
                     for x in range(i * 3, i * 3 + 3)
                 ],
                 new_tip="never",
-                disposal_volume=0,
+                disposal_volume=2,
+                blow_out=True,
+                blowout_location="source well",
             )
         right_pipette.drop_tip()
 
