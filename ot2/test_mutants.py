@@ -110,7 +110,7 @@ def run(protocol: protocol_api.ProtocolContext):
                 for x in range(i * 3, i * 3 + 3)
             ],
             new_tip="never",
-            disposal_volume=2,
+            disposal_volume=2,  # TODO this configuration DOES NOT WORK. Still makes a mess. Probably should just add to the bottom of the well and use a new tip each time. Or implement a custom touch tip movement that works at the middle of the well.
             blow_out=True,
             blowout_location="source well",
         )
