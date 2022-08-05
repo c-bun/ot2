@@ -13,6 +13,9 @@ metadata = {
 NUMBER_OF_MUTANTS = 8  # up to 16
 NUMBER_OF_CONDITIONS = 7  # up to 8 conditions
 
+assert NUMBER_OF_MUTANTS <= 16, "Too many mutants, max is 16."
+assert NUMBER_OF_CONDITIONS <= 8, "Too many conditions, max is 8."
+
 AMOUNT_OF_PEPTIDE = 10
 AMOUNT_OF_FRZ = (
     2  # FRZ should be in the 12th column of the second (conditions) deepwell plate.
@@ -99,36 +102,6 @@ def run(protocol: protocol_api.ProtocolContext):
         )
         right_pipette.drop_tip()
 
-    # Now, transfer the peptides to the 384 well plate.
-    for i in range(NUMBER_OF_CONDITIONS):
-        right_pipette.pick_up_tip()  # each new condition gets a new tip
-        right_pipette.distribute(
-            AMOUNT_OF_PEPTIDE,
-            deepwell_peptides.wells_by_name()["A{}".format(i + 1)],
-            [
-                well384plate.wells_by_name()["A{}".format(x + 1)].top(z=-5)
-                for x in range(i * 3, i * 3 + 3)
-            ],
-            new_tip="never",
-            disposal_volume=2,
-            blow_out=True,
-            blowout_location="source well",
-        )
-        if NUMBER_OF_MUTANTS > 8:
-            right_pipette.distribute(
-                AMOUNT_OF_PEPTIDE,
-                deepwell_peptides.wells_by_name()["A{}".format(i + 1)],
-                [
-                    well384plate.wells_by_name()["B{}".format(x + 1)].top(z=-5)
-                    for x in range(i * 3, i * 3 + 3)
-                ],
-                new_tip="never",
-                disposal_volume=2,
-                blow_out=True,
-                blowout_location="source well",
-            )
-        right_pipette.drop_tip()
-
     # Pause protocol before FRZ addition.
     protocol.pause(
         "Please add FRZ to the 12th column of the second (conditions) deepwell plate."
@@ -152,9 +125,37 @@ def run(protocol: protocol_api.ProtocolContext):
             AMOUNT_OF_FRZ,
             deepwell_peptides.wells_by_name()["A12"],
             [
-                well384plate.wells_by_name()["A{}".format(x + 1)].top(z=-1)
+                well384plate.wells_by_name()["B{}".format(x + 1)].top(z=-1)
                 for x in range(NUMBER_OF_CONDITIONS * 3)
             ],
             touch_tip=True,
             disposal_volume=0,
         )
+
+    # Now, transfer the peptides to the 384 well plate. Is *should* be ok that this does not use a different tip because it is touching the top of the well.
+    for i in range(NUMBER_OF_CONDITIONS):
+        right_pipette.pick_up_tip()  # each new condition gets a new tip
+        right_pipette.distribute(
+            AMOUNT_OF_PEPTIDE,
+            deepwell_peptides.wells_by_name()["A{}".format(i + 1)],
+            [
+                well384plate.wells_by_name()["A{}".format(x + 1)].top(z=-1)
+                for x in range(i * 3, i * 3 + 3)
+            ],
+            new_tip="never",
+            disposal_volume=0,
+            touch_tip=True,
+        )
+        if NUMBER_OF_MUTANTS > 8:
+            right_pipette.distribute(
+                AMOUNT_OF_PEPTIDE,
+                deepwell_peptides.wells_by_name()["A{}".format(i + 1)],
+                [
+                    well384plate.wells_by_name()["B{}".format(x + 1)].top(z=-1)
+                    for x in range(i * 3, i * 3 + 3)
+                ],
+                new_tip="never",
+                disposal_volume=0,
+                touch_tip=True,
+            )
+        right_pipette.drop_tip()
