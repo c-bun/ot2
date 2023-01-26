@@ -13,7 +13,7 @@ metadata = {
 }
 
 # Specify how much you want the robot to collect for each hit
-CHERRY_PICK_AMOUNT = 10
+CHERRY_PICK_AMOUNT = 5
 
 # Specify where you want each peptide to go for the epp tube rack.
 TO_PICK_POSITIONS = (
@@ -30,9 +30,9 @@ peptide,,,,
 13,86,1,B,10
 28,104,1,C,2
 29,104,1,E,3
-32,86,2,C,6
-35,104,2,F,9
-40,104,2,D,12
+32,86,1,C,6
+35,104,1,F,9
+40,104,1,D,12
 """
 
 # Read the CSV file and return a list of dictionaries.
@@ -112,4 +112,5 @@ def run(protocol: protocol_api.ProtocolContext):
             epp_tubes[destination],
             home_after=home_after,
             touch_tip=True,
+            mix_before=(3,10),
         )

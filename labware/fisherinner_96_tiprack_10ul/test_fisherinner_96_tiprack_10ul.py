@@ -2,12 +2,12 @@ import json
 from opentrons import protocol_api, types
 
 
-TEST_TIPRACK_SLOT = '5'
+TEST_TIPRACK_SLOT = '11'
 
 RATE = 0.25  # % of default speeds
 SLOWER_RATE = 0.1
 
-PIPETTE_MOUNT = 'right'
+PIPETTE_MOUNT = 'left'
 PIPETTE_NAME = 'p20_single_gen2'
 
 
