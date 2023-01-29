@@ -10,7 +10,7 @@ metadata = {
     "apiLevel": "2.12",
 }
 
-NUMBER_OF_MUTANTS = 8  # up to 16
+NUMBER_OF_MUTANTS = 11  # up to 16
 NUMBER_OF_CONDITIONS = 7  # up to 8 conditions
 
 assert NUMBER_OF_MUTANTS <= 16, "Too many mutants, max is 16."
