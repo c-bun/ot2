@@ -19,6 +19,7 @@ FRZ_WELL = "A12"
 PEPTIDE_AMOUNT = 8
 FRZ_AMOUNT = 2
 LYSATE_AMOUNT = 8
+USE_PAUSES = True
 
 
 def consolidate_plate(
@@ -37,7 +38,7 @@ def consolidate_plate(
     :param amount: amount of material to consolidate
     """
     for n, origin_plate in enumerate(origin_plates):
-        protocol.pause("Confirm plates of lysate are present in the correct locations.")
+        #protocol.pause("Confirm plates of lysate are present in the correct locations.")
         for i, col in enumerate(origin_plate.columns_by_name()):
             pipette.pick_up_tip()
             # Correctly iterate through A1 and B1 on the 384 well plate.
@@ -129,10 +130,13 @@ def run(protocol: protocol_api.ProtocolContext):
             )
 
     # Now distribute the two, 96 well plates of mutants into the 384 well plate.
+    if USE_PAUSES:
+        protocol.pause("Confirm plates of lysate are present in the correct locations.") # pause in case the plates are not currently on the deck
     consolidate_plate(protocol, right_pipette, deepwell_plates, well384, PEPTIDE_AMOUNT)
 
     # Pause and confirm ready to add FRZ
-    protocol.pause("Confirm that FRZ is in the appropriate well and ready.")
+    if USE_PAUSES:
+        protocol.pause("Confirm that FRZ is in the appropriate well and ready.")
 
     # Now add FRZ
     if NUMBER_OF_DEEPWELL_PLATES == 2:
