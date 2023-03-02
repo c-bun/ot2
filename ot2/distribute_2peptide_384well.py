@@ -145,7 +145,7 @@ def run(protocol: protocol_api.ProtocolContext):
             well12.wells_by_name()[FRZ_WELL],
             well384.wells(),
             new_tip="always",
-            mix_after=(3, 8),  # If this is skipped, mix on the plate reader.
+            mix_after=(1, 8),  # If this is skipped, mix on the plate reader.
             home_after=False,
         )
         amounts["frz"] += 384 * FRZ_AMOUNT
@@ -155,7 +155,7 @@ def run(protocol: protocol_api.ProtocolContext):
             well12.wells_by_name()[FRZ_WELL],
             well384.columns()[:12],
             new_tip="always",
-            mix_after=(3, 8),  # If this is skipped, mix on the plate reader.
+            mix_after=(1, 8),  # If this is skipped, mix on the plate reader.
             home_after=False,
         )
         amounts["frz"] += FRZ_AMOUNT * 384 / 2

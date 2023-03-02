@@ -7,7 +7,7 @@ import csv
 
 # metadata
 metadata = {
-    "protocolName": "Colony Picker",
+    "protocolName": "Colony Picker into 384 Well Plate",
     "author": "Colin Rathbun <rathbunc@dickinson.edu>",
     "description": "Given a CSV of colony locations, pick the colonies and innoculate them in a 384 well plate.",
     "apiLevel": "2.12",
@@ -27,7 +27,7 @@ CONTROL_WELLS = ["A1", "B1", "C1", "D1", "E1", "F1"] # Don't forget to pick thes
 
 colonies_picked = len(CONTROL_WELLS)
 
-# Paste CSV files here. This can only be between 1 and 3 dishes. There MUST be enogh colonies in the csv to fill all plates.
+# Paste CSV files here. This can only be between 1 and 4 dishes. There MUST be enogh colonies in the csv to fill all well plates.
 PLATE_CSV = """
 x coord,y coord,quality,x mm,y mm,x%,y%,image_name,plate
 469,95,0.9999999999999996,11.855787781350482,23.5540192926045,0.19987840818259264,0.5735789429588336,ansi_colony_test_1.png,1
