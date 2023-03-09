@@ -13,8 +13,8 @@ metadata = {
     "apiLevel": "2.12",
 }
 
-# This should be False when not testing
-TESTING = True
+TESTING = False # This should be False when not testing
+DRYRUN = True # For not adding PBS at the beginning of the protocol.
 
 # Other hardcoded parameters
 NUMBER_OF_WELL_PLATES = (
@@ -28,7 +28,8 @@ CONTROL_WELLS = ["A1", "B1", "C1", "D1", "E1", "F1"] # Don't forget to pick thes
 colonies_picked = len(CONTROL_WELLS)
 
 # Paste CSV files here. This can only be between 1 and 4 dishes. There MUST be enogh colonies in the csv to fill all well plates.
-PLATE_CSV = """
+if TESTING:
+    PLATE_CSV = """
 x coord,y coord,quality,x mm,y mm,x%,y%,image_name,plate
 469,95,0.9999999999999996,11.855787781350482,23.5540192926045,0.19987840818259264,0.5735789429588336,ansi_colony_test_1.png,1
 278,25,0.96875,-15.443086816720259,33.5588424437299,-0.26035719154885373,0.8172127710636772,ansi_colony_test_1.png,1
@@ -598,6 +599,9 @@ x coord,y coord,quality,x mm,y mm,x%,y%,image_name,plate
 40,447,0.75,-49.45948553054662,-26.755948553054665,-0.8338444833608131,-0.6515511640826657,n8_plate_2.png,3
 183,480,0.7499999999999998,-29.02106109324759,-31.47250803858521,-0.4892701861796778,-0.7664071116178063,n8_plate_2.png,3
 """
+else:
+    PLATE_CSV = """
+{{colony_locations}}"""
 
 csv_data = PLATE_CSV.splitlines()[1:]  # Discard the blank first line.
 colonies = list(csv.DictReader(csv_data))
@@ -739,14 +743,15 @@ def run(protocol: protocol_api.ProtocolContext):
         "p20_multi_gen2", "right", tip_racks=tip_racks
     )
 
-    # Fill the well plates with 20 uL from the reservoir.
-    for plate in well_plates:
-        right_pipette.transfer(
-            20,
-            reservoir.wells_by_name()[PBS_WELL],
-            plate.wells(),
-            new_tip="once",
-        )
+    if not DRYRUN:
+        # Fill the well plates with 20 uL from the reservoir.
+        for plate in well_plates:
+            right_pipette.transfer(
+                20,
+                reservoir.wells_by_name()[PBS_WELL],
+                plate.wells(),
+                new_tip="once",
+            )
 
     for colony in colonies:
         if colonies_picked < (NUMBER_OF_WELLS * len(well_plates)):
@@ -771,21 +776,22 @@ def run(protocol: protocol_api.ProtocolContext):
         else:
             print("Done with all plates.")
             break
-    print("Done with plate {}".format(plate))
-
-    protocol.pause(
-        "Done with colonies, ADD TIPS TO ALL EMPTY POSITIONS and press resume to add furimazine."
-    )
-    # This assumes that we added tips!!
-    right_pipette.reset_tipracks()
-    left_pipette.reset_tipracks()
-
-    # Add 5 uL furimazine to the well plates from the reservoir.
-    for plate in well_plates:
-        right_pipette.transfer(
-            5,
-            reservoir.wells_by_name()[FRZ_WELL],
-            plate.wells(),
-            new_tip="always",
-            mix_after=(1, 5),
+    
+    if not DRYRUN:
+        protocol.pause(
+            "Done with colonies, ADD TIPS TO ALL EMPTY POSITIONS and press resume to add furimazine."
         )
+        # This assumes that we added tips!!
+        right_pipette.reset_tipracks()
+        left_pipette.reset_tipracks()
+
+        
+        # Add 5 uL furimazine to the well plates from the reservoir.
+        for plate in well_plates:
+            right_pipette.transfer(
+                5,
+                reservoir.wells_by_name()[FRZ_WELL],
+                plate.wells(),
+                new_tip="always",
+                mix_after=(1, 5),
+            )
