@@ -99,10 +99,10 @@ def run(protocol: protocol_api.ProtocolContext):
     well12 = protocol.load_labware("nest_12_reservoir_15ml", 4)
 
     tip_racks = [
-        protocol.load_labware("opentrons_96_tiprack_20ul", 11),
-        protocol.load_labware("opentrons_96_tiprack_20ul", 10),
-        protocol.load_labware("opentrons_96_tiprack_20ul", 9),
-        protocol.load_labware("opentrons_96_tiprack_20ul", 8),
+        # protocol.load_labware("opentrons_96_tiprack_20ul", 11),
+        # protocol.load_labware("opentrons_96_tiprack_20ul", 10),
+        # protocol.load_labware("opentrons_96_tiprack_20ul", 9),
+        # protocol.load_labware("opentrons_96_tiprack_20ul", 8),
         protocol.load_labware("opentrons_96_tiprack_20ul", 7),
         protocol.load_labware("opentrons_96_tiprack_20ul", 6),
         protocol.load_labware("opentrons_96_tiprack_20ul", 5),
