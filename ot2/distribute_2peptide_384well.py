@@ -13,7 +13,7 @@ metadata = {
 
 TESTING = False
 
-NUMBER_OF_DEEPWELL_PLATES = 2  # this can only be 1 or 2 right now
+NUMBER_OF_DEEPWELL_PLATES = 2  # this can only be 2 right now
 PEPTIDE_WELLS = ["A1", "A2"]  # for now, this only works with two peptides
 FRZ_WELL = "A12"
 PEPTIDE_AMOUNT = 8
@@ -139,25 +139,15 @@ def run(protocol: protocol_api.ProtocolContext):
         protocol.pause("Confirm that FRZ is in the appropriate well and ready.")
 
     # Now add FRZ
-    if NUMBER_OF_DEEPWELL_PLATES == 2:
-        right_pipette.transfer(
-            FRZ_AMOUNT,
-            well12.wells_by_name()[FRZ_WELL],
-            well384.wells(),
-            new_tip="always",
-            mix_after=(1, 8),  # If this is skipped, mix on the plate reader.
-            home_after=False,
-        )
-        amounts["frz"] += 384 * FRZ_AMOUNT
-    else:
-        right_pipette.transfer(
-            FRZ_AMOUNT,
-            well12.wells_by_name()[FRZ_WELL],
-            well384.columns()[:12],
-            new_tip="always",
-            mix_after=(1, 8),  # If this is skipped, mix on the plate reader.
-            home_after=False,
-        )
-        amounts["frz"] += FRZ_AMOUNT * 384 / 2
+    right_pipette.transfer( # TODO this should be distribute in the future, and should pick up 20 uL and add 2 to each well.
+        FRZ_AMOUNT,
+        well12.wells_by_name()[FRZ_WELL],
+        [x.top(z=-1) for x in well384.wells()],
+        new_tip="once",
+        touch_tip=True,
+        #mix_after=(1, 8),  # If this is skipped, mix on the plate reader.
+        home_after=False,
+    )
+    amounts["frz"] += 384 * FRZ_AMOUNT
 
     print("Amounts of reagents used: ", amounts)
