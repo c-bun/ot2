@@ -10,7 +10,7 @@ metadata = {
 }
 
 TESTING = False
-AMOUNT_TO_ADD = 2
+AMOUNT_TO_ADD = 5 # this is in uL and should not be less than 5
 LOCATION_OF_REAGENT = "A1"
 ADD_TO_TOP_OF_WELL = True
 
@@ -73,6 +73,4 @@ def run(protocol: protocol_api.ProtocolContext):
             new_tip="once",
             touch_tip=True,
             home_after=False,
-            blow_out=True,
-            blowout_location="destination well",
         )

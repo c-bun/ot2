@@ -17,7 +17,7 @@ NUMBER_OF_DEEPWELL_PLATES = 2  # this can only be 2 right now
 PEPTIDE_WELLS = ["A1", "A2"]  # for now, this only works with two peptides
 FRZ_WELL = "A12"
 PEPTIDE_AMOUNT = 8
-FRZ_AMOUNT = 2
+FRZ_AMOUNT = 5 # this is in uL and should not be less than 5
 LYSATE_AMOUNT = 8
 USE_PAUSES = True
 
@@ -51,7 +51,7 @@ def consolidate_plate(
                         z=4
                     ),  # Grab from 6mm above the bottom of the plate to avoid lysate goo. TODO change this when switch to eCPX.
                     row.top(
-                        z=-2
+                        z=-5
                     ),  # Dispense at the top of the well so that pipette tip is not contaminated.
                     touch_tip=True,
                     new_tip="never",
@@ -142,10 +142,9 @@ def run(protocol: protocol_api.ProtocolContext):
     right_pipette.transfer( # TODO this should be distribute in the future, and should pick up 20 uL and add 2 to each well.
         FRZ_AMOUNT,
         well12.wells_by_name()[FRZ_WELL],
-        [x.top(z=-1) for x in well384.wells()],
+        [x.top(z=-3) for x in well384.wells()],
         new_tip="once",
         touch_tip=True,
-        #mix_after=(1, 8),  # If this is skipped, mix on the plate reader.
         home_after=False,
     )
     amounts["frz"] += 384 * FRZ_AMOUNT
