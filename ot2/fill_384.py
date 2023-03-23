@@ -9,8 +9,8 @@ metadata = {
     "apiLevel": "2.12",
 }
 
-TESTING = True
-AMOUNT_TO_ADD = 8
+TESTING = False
+AMOUNT_TO_ADD = 2
 LOCATION_OF_REAGENT = "A1"
 ADD_TO_TOP_OF_WELL = True
 
@@ -69,8 +69,10 @@ def run(protocol: protocol_api.ProtocolContext):
         pipette.transfer( # TODO this should be distribute in the future, and should pick up 20 uL and add 2 to each well.
             AMOUNT_TO_ADD,
             reservoir.wells_by_name()[LOCATION_OF_REAGENT],
-            [x.top(z=-1) for x in well_plate.wells()],
+            [x.top(z=-3) for x in well_plate.wells()],
             new_tip="once",
             touch_tip=True,
             home_after=False,
+            blow_out=True,
+            blowout_location="destination well",
         )
