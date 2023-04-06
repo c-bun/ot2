@@ -49,10 +49,10 @@ def consolidate_plate(
                     amount,
                     origin_plate.columns_by_name()[col][0].bottom(
                         z=4
-                    ),  # Grab from 6mm above the bottom of the plate to avoid lysate goo. TODO change this when switch to eCPX.
-                    row.top(
-                        z=-5
-                    ),  # Dispense at the top of the well so that pipette tip is not contaminated.
+                    ),  # Grab from 4mm above the bottom of the plate to avoid lysate goo. TODO change this when switch to eCPX.
+                    row.bottom(
+                        z=5
+                    ),  # Dispense into the middle of the well so that pipette tip is not contaminated.
                     touch_tip=True,
                     new_tip="never",
                 )
@@ -142,7 +142,7 @@ def run(protocol: protocol_api.ProtocolContext):
     right_pipette.transfer( # TODO this should be distribute in the future, and should pick up 20 uL and add 2 to each well.
         FRZ_AMOUNT,
         well12.wells_by_name()[FRZ_WELL],
-        [x.top(z=-3) for x in well384.wells()],
+        [x.top(z=-2) for x in well384.wells()],
         new_tip="once",
         touch_tip=True,
         home_after=False,
