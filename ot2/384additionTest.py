@@ -87,6 +87,7 @@ def run(protocol: protocol_api.ProtocolContext):
             new_tip="never",
             #touch_tip=True,
             home_after=False,
+            rate=0.5,
         )
     
     # drop the tip
